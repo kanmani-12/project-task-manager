@@ -9,10 +9,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Connect to MongoDB Atlas (connection string comes from the MONGODB_URI environment variable)
+if (!process.env.MONGODB_URI) {
+  console.error(
+    "MONGODB_URI is not set. Add it to .env or your host's environment variables.",
+  );
+  process.exit(1);
+}
+
 mongoose
-  .connect("mongodb://127.0.0.1:27017/taskmanager")
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB connection error:", err));
+  .connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 })
+  .then(() =>
+    console.log(`MongoDB Atlas connected: ${mongoose.connection.name}`),
+  )
+  .catch((err) => {
+    console.error("MongoDB connection error:", err.message);
+    process.exit(1);
+  });
 
 const TaskSchema = new mongoose.Schema(
   {
@@ -85,5 +98,5 @@ app.delete("/tasks/:id", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
